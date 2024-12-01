@@ -42,6 +42,7 @@ typedef struct
 
 const char s_cmdMode[] PROGMEM = "MODE";
 const char s_cmdState[] PROGMEM = "STATE";
+const char s_cmdStatem[] PROGMEM = "STATEM";
 const char s_cmdTime[] PROGMEM = "TI";
 const char s_cmdTimeOn[] PROGMEM = "TION";
 const char s_cmdTimeOff[] PROGMEM = "TIOFF";
@@ -54,8 +55,13 @@ const char s_cmdShakeDetectorGyrMax[] PROGMEM = "SHGYR";
 const char s_cmdHeaterAmperage[] PROGMEM = "HTI";
 const char s_cmdConfig[] PROGMEM = "CONF";
 
+// write calibration time, heater amperage, battery, temperature, shake 
+// >> confm 0203010101
+const char s_cmdConfigm[] PROGMEM = "CONFM";
+
 void cmdMode(const char *args);
 void cmdState(const char *args);
+void cmdStatem(const char *args);
 void cmdTime(const char *args);
 void cmdTimeOn(const char *args);
 void cmdTimeOff(const char *args);
@@ -67,10 +73,12 @@ void cmdShakeDetectorAccMax(const char *args);
 void cmdShakeDetectorGyrMax(const char *args);
 void cmdHeaterAmperage(const char *args);
 void cmdConfig(const char *args);
+void cmdConfigm(const char *args);
 
 const command_t commands[] PROGMEM = {
   { s_cmdMode, cmdMode },
   { s_cmdState, cmdState },
+  { s_cmdStatem, cmdStatem },
   { s_cmdTime, cmdTime },
   { s_cmdTimeOn, cmdTimeOn },
   { s_cmdTimeOff, cmdTimeOff },
@@ -82,6 +90,7 @@ const command_t commands[] PROGMEM = {
   { s_cmdShakeDetectorGyrMax, cmdShakeDetectorGyrMax },
   { s_cmdHeaterAmperage, cmdHeaterAmperage },
   { s_cmdConfig, cmdConfig },
+  { s_cmdConfigm, cmdConfigm },
   { 0, 0 }
 };
 

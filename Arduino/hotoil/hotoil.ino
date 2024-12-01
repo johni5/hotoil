@@ -85,10 +85,20 @@ void shakeDetection() {
 }
 
 void initShakeDetection() {
+  // GND
+  pinMode(A7, OUTPUT);
+  pinMode(A6, OUTPUT);
+  digitalWrite(A7, LOW);
+  digitalWrite(A6, LOW);
+  delay(100);
+
   Wire.begin();
   mpu.initialize();
   shakeDetectorEnabled = mpu.testConnection();
   mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
+  if(!shakeDetectorEnabled) {
+    Serial.println("MPU6050 not enabled");
+  }
 }
 
 void initADC() {
@@ -154,6 +164,12 @@ void loop() {
 }
 
 void handleIdle() {
+  if (millis() - waitTimeout > 1000) {
+    if (status.on && !testForRun()) {
+      powerOff();
+    }
+    waitTimeout = millis();
+  }
   delay(50);
 }
 
@@ -286,7 +302,7 @@ bool testForRun() {
 
   if (status.on && (millis() - timePowerOn > 3000)) {
     readHeaterAmperage(&v);
-    if (v < config.heaterAmpMin) {
+    if (config.heaterAmpMin > 0 && v < config.heaterAmpMin) {
       status.bad_heater = 1;
       return false;
     } else {
@@ -300,78 +316,6 @@ bool testForRun() {
 
   return true;
 }
-
-/**
-Serial protocol
-если команда с параметром то запись если нет то чтение
-
--m {mode}
-Mode: r/w
-  0 - off
-  1 - on
-  2 - test
-
--s
-State: r
-  0 - off
-  1 - wait on
-  2 - wait off
-  3 - temperaure too hi
-  4 - low battery
-  5 - shake detected
-  6 - heater error
-
--ti {HH}{MM}{SS}
-Time: r/w
-  HH - byte
-  MM - byte
-  SS - byte
-
--tion {HH}{MM}{SS}
-Time to ON: r/w
-  HH - byte
-  MM - byte
-  SS - byte
-
--tioff {HH}{MM}{SS}
-Time to OFF: r/w
-  HH - byte
-  MM - byte
-  SS - byte
-
--vb
-Battery level: float r
-
--vbmin {Vmin}
-Battery low level: byte r/w
-  no parameter to read
-  byte - to write in volts
-
--tg
-Read temperature: float r
-
--tgmin {Tmin}
-Temperatue top level: byte r/w
-  no parameter to read
-  byte - to write in volts
-
--shmod {shakeMode} 
-Shake detector mode: byte r/w
-  no parameter to read
-  0 - off
-  1 - on
-  2 - calibration
-
--shacc {ACC_MAX}
-Shake ACC top level: int (2 bytes) r/w
-
--shgyr {GYR_MAX}
-Shake GYR top level: int (2 bytes) r/w
-
--hti
-Heater amperage: float r
-
-*/
 
 void cmdMode(const char *args) {
   uint8_t _m;
@@ -390,6 +334,23 @@ void cmdMode(const char *args) {
 
 void cmdState(const char *args) {
   Serial.println(status.raw, DEC);
+}
+
+void cmdStatem(const char *args) {
+  Serial.print(F("ON="));
+  Serial.println(status.on, DEC);
+  Serial.print(F("MODE="));
+  Serial.println(status.mode, DEC);
+  Serial.print(F("Low battery="));
+  Serial.println(status.low_battery, DEC);
+  Serial.print(F("Hi temperature="));
+  Serial.println(status.hi_temperature, DEC);
+  Serial.print(F("Shake detected="));
+  Serial.println(status.shake, DEC);
+  Serial.print(F("Bad heater="));
+  Serial.println(status.bad_heater, DEC);
+  Serial.print(F("Bad clock="));
+  Serial.println(status.bad_clock, DEC);
 }
 
 void cmdTime(const char *args) {
@@ -536,12 +497,35 @@ void cmdConfig(const char *args) {
   sendError();
 }
 
+void cmdConfigm(const char *args) {
+  uint8_t c[5];
+  if (parseBytesArray(args, c) == 5) {
+    config.shake = c[4];
+    config.temperature = c[3];
+    config.battery = c[2];
+    config.heaterAmpMin = c[1];
+    config.calibrationSeconds = c[0];
+    sendOk();
+  } else {
+    Serial.print(F("Shake detection="));
+    Serial.println(config.shake, DEC);
+    Serial.print(F("Temperature="));
+    Serial.println(config.temperature, DEC);
+    Serial.print(F("Battery="));
+    Serial.println(config.battery, DEC);
+    Serial.print(F("Heater amperage minimum [A]="));
+    Serial.println(config.heaterAmpMin, DEC);
+    Serial.print(F("Calibration time [seconds]="));
+    Serial.println(config.calibrationSeconds, DEC);
+  }
+}
+
 void sendError() {
   Serial.println("ERROR");
 }
 
 void sendOk() {
-  Serial.println("OK");
+  Serial.println(status.raw, DEC);
 }
 
 void listenPort() {
