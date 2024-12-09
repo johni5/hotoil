@@ -8,10 +8,11 @@
 #include <microDS18B20.h>
 
 #define INTERNAL_VREF 1.024
-#define HEATER_AMP_PIN A2
-#define BATTERY_VD_PIN A0
-#define RELAY_PIN 13
-#define DS18B20_PIN 8
+#define HEATER_AMP_PIN A0
+#define BATTERY_VD_PIN A7
+#define RELAY_PIN A1
+#define DS18B20_PIN 10
+
 
 #define BINARY_TRANSFER_MAX 64
 #define BUFFER_MAX (BINARY_TRANSFER_MAX + 1)
@@ -96,7 +97,7 @@ void initShakeDetection() {
   mpu.initialize();
   shakeDetectorEnabled = mpu.testConnection();
   mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
-  if(!shakeDetectorEnabled) {
+  if (!shakeDetectorEnabled) {
     Serial.println("MPU6050 not enabled");
   }
 }
