@@ -6,6 +6,7 @@
 typedef struct {
   uint8_t mm;
   uint8_t hh;
+  uint8_t delay_mm;
 } alarm_t;
 
 typedef union {
@@ -45,7 +46,6 @@ const char s_cmdState[] PROGMEM = "STATE";
 const char s_cmdStatem[] PROGMEM = "STATEM";
 const char s_cmdTime[] PROGMEM = "TI";
 const char s_cmdTimeOn[] PROGMEM = "TION";
-const char s_cmdTimeOff[] PROGMEM = "TIOFF";
 const char s_cmdBatteryLevel[] PROGMEM = "VB";
 const char s_cmdBatteryLevelMin[] PROGMEM = "VBMIN";
 const char s_cmdTemperature[] PROGMEM = "TG";
@@ -64,7 +64,6 @@ void cmdState(const char *args);
 void cmdStatem(const char *args);
 void cmdTime(const char *args);
 void cmdTimeOn(const char *args);
-void cmdTimeOff(const char *args);
 void cmdBatteryLevel(const char *args);
 void cmdBatteryLevelMin(const char *args);
 void cmdTemperature(const char *args);
@@ -81,7 +80,6 @@ const command_t commands[] PROGMEM = {
   { s_cmdStatem, cmdStatem },
   { s_cmdTime, cmdTime },
   { s_cmdTimeOn, cmdTimeOn },
-  { s_cmdTimeOff, cmdTimeOff },
   { s_cmdBatteryLevel, cmdBatteryLevel },
   { s_cmdBatteryLevelMin, cmdBatteryLevelMin },
   { s_cmdTemperature, cmdTemperature },
@@ -93,4 +91,3 @@ const command_t commands[] PROGMEM = {
   { s_cmdConfigm, cmdConfigm },
   { 0, 0 }
 };
-

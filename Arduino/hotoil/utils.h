@@ -1,3 +1,7 @@
+#include <Wire.h>
+
+#define EEPROM_ADDRESS_I2C 0x50
+
 uint8_t parseInt(const char *args, uint16_t *value) {
   uint8_t size = 0;
   *value = 0;
@@ -72,4 +76,24 @@ byte crc8(byte *buffer, byte size) {
     }
   }
   return crc;
+}
+
+void writeEEPROM(uint16_t addr, byte data) {
+  Wire.beginTransmission(EEPROM_ADDRESS_I2C);
+  Wire.write((addr >> 8) & 0xFF);
+  Wire.write(addr & 0xFF);
+  Wire.write(data);
+  Wire.endTransmission();
+  delay(5);
+}
+
+
+byte readEEPROM(uint16_t addr) {
+  Wire.beginTransmission(EEPROM_ADDRESS_I2C);
+  Wire.write((addr >> 8) & 0xFF);
+  Wire.write(addr & 0xFF);
+  Wire.endTransmission();
+  Wire.requestFrom(EEPROM_ADDRESS_I2C, 1);
+  while (Wire.available() == 0);
+  return Wire.read();
 }

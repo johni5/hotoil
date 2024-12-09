@@ -36,8 +36,7 @@ uint32_t accMax = 500, gyrMax = 500;
 float batV;
 float heatI;
 tmElements_t tm;
-alarm_t timeOn;
-alarm_t timeOff;
+alarm_t timer;
 uint8_t batteryLevelMin;
 uint8_t temperatureMax;
 config_t config;
@@ -93,7 +92,6 @@ void initShakeDetection() {
   digitalWrite(A6, LOW);
   delay(100);
 
-  Wire.begin();
   mpu.initialize();
   shakeDetectorEnabled = mpu.testConnection();
   mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
@@ -132,14 +130,24 @@ void readHeaterAmperage(float *heatI) {
 
 void setup() {
   Serial.begin(9600);
+  Wire.begin();
   initShakeDetection();
   initADC();
   pinMode(RELAY_PIN, OUTPUT);
 
+  byte first = readEEPROM(0);
+  if (first == 0xFF) {
+    writeEEPROM(0, 0);
+    config.calibrationSeconds = 3;
+    config.heaterAmpMin = 1;
+    writeEEPROM(1, config.raw);
+  } else {
+    config.raw = readEEPROM(1);
+  }
+
+
   status.mode = MODE_IDLE;
   powerOff();
-  config.calibrationSeconds = 3;
-  config.heaterAmpMin = 1;
 }
 
 
@@ -179,11 +187,12 @@ void handleWait() {
     status.bad_clock = !RTC.read(tm);
     if (!status.bad_clock && testForRun()) {
       if (status.on) {
-        if (tm.Hour == timeOff.hh && tm.Minute == timeOff.mm) {
+        uint16_t start_minutes = (tm.Hour * 60 + tm.Minute) - (timer.hh * 60 + timer.mm);
+        if (start_minutes >= timer.delay_mm) {
           powerOff();
         }
       } else {
-        if (tm.Hour == timeOn.hh && tm.Minute == timeOn.mm) {
+        if (tm.Hour == timer.hh && tm.Minute == timer.mm) {
           if (!powerOn()) {
             status.mode = MODE_IDLE;
           }
@@ -380,33 +389,18 @@ void cmdTime(const char *args) {
 }
 
 void cmdTimeOn(const char *args) {
-  uint8_t time[2];
+  uint8_t time[3];
   uint8_t l = parseBytesArray(args, time);
   if (l == 0) {
-    print2digits(timeOn.hh);
-    print2digits(timeOn.mm);
+    print2digits(timer.hh);
+    print2digits(timer.mm);
+    print2digits(timer.delay_mm);
     Serial.println();
     return;
-  } else if (l == 2) {
-    timeOn.hh = time[0] < 24 ? time[0] : 0;
-    timeOn.mm = time[1] < 60 ? time[1] : 0;
-    sendOk();
-    return;
-  }
-  sendError();
-}
-
-void cmdTimeOff(const char *args) {
-  uint8_t time[2];
-  uint8_t l = parseBytesArray(args, time);
-  if (l == 0) {
-    print2digits(timeOff.hh);
-    print2digits(timeOff.mm);
-    Serial.println();
-    return;
-  } else if (l == 2) {
-    timeOff.hh = time[0] < 24 ? time[0] : 0;
-    timeOff.mm = time[1] < 60 ? time[1] : 0;
+  } else if (l == 3) {
+    timer.hh = time[0] < 24 ? time[0] : 0;
+    timer.mm = time[1] < 60 ? time[1] : 0;
+    timer.delay_mm = time[2] < 60 ? time[2] : 0;
     sendOk();
     return;
   }
@@ -489,6 +483,7 @@ void cmdConfig(const char *args) {
   uint16_t _v;
   if (parseInt(args, &_v) > 0) {
     config.raw = _v;
+    writeEEPROM(1, config.raw);
     sendOk();
     return;
   } else {
@@ -506,6 +501,7 @@ void cmdConfigm(const char *args) {
     config.battery = c[2];
     config.heaterAmpMin = c[1];
     config.calibrationSeconds = c[0];
+    writeEEPROM(1, config.raw);
     sendOk();
   } else {
     Serial.print(F("Shake detection="));
