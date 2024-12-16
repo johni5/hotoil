@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Hotoil</string>
+
+    <string name="connection">Подключение…</string>
+    <string name="no_bluetooth">BLUETOOTH не поддерживается</string>
+    <string name="bluetooth_off">BLUETOOTH отключен. Пожалуйста, включите его в настройках</string>
+    <string name="device">Устройство</string>
+    <string name="no_bt_permission">Доступ к BLUETOOTH не предоставлен</string>
+    <string name="connection_fail">Соединение прервано, проверьте устройство!</string>
+    <string name="device_not_found">Не найдено устройство</string>
+    <string name="send_error">Ошибка при отправке сообщения</string>
+    <string name="timeInfo">Запуск через 12:30</string>
+    <string name="device_info">Нет подключения</string>
+</resources>

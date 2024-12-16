@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/connectionIV"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/Connection.OFF"
+            android:background="@drawable/bluetooth"/>
+
+        <TextView
+            android:id="@+id/deviceInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/device_info"
+            android:textColor="@color/Connection.OFF"
+            android:layout_gravity="center"/>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/waveIV"
+                android:backgroundTint="@color/ImageView.OFF"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/space1"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="@dimen/main_icons_margin"
+                app:layout_constraintEnd_toStartOf="@+id/temperatureIV"
+                android:background="@drawable/wave_pulse"/>
+
+            <ImageView
+                android:id="@+id/temperatureIV"
+                android:backgroundTint="@color/ImageView.OFF"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/temperatureTxt"
+                app:layout_constraintStart_toEndOf="@+id/waveIV"
+                app:layout_constraintEnd_toStartOf="@+id/accumulatorIV"
+                android:background="@drawable/temperature_snow"/>
+
+            <ImageView
+                android:id="@+id/accumulatorIV"
+                android:backgroundTint="@color/ImageView.OFF"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/batteryTxt"
+                app:layout_constraintStart_toEndOf="@+id/temperatureIV"
+                app:layout_constraintEnd_toStartOf="@+id/heaterIV"
+                android:background="@drawable/accumulator"/>
+
+            <ImageView
+                android:id="@+id/heaterIV"
+                android:backgroundTint="@color/ImageView.OFF"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/heaterTxt"
+                app:layout_constraintStart_toEndOf="@+id/accumulatorIV"
+                app:layout_constraintEnd_toStartOf="@+id/clockIV"
+                android:background="@drawable/heater"/>
+
+            <ImageView
+                android:id="@+id/clockIV"
+                android:backgroundTint="@color/ImageView.OFF"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginEnd="@dimen/main_icons_margin"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/localTime"
+                app:layout_constraintStart_toEndOf="@+id/heaterIV"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:background="@drawable/clock_three"/>
+
+            <Space
+                android:id="@+id/space1"
+                android:backgroundTint="@color/ImageView.OFF"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="@dimen/main_icons_margin"
+                app:layout_constraintTop_toBottomOf="@+id/waveIV"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/temperatureTxt"
+                />
+
+            <TextView
+                android:id="@+id/temperatureTxt"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                app:layout_constraintTop_toBottomOf="@+id/temperatureIV"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/space1"
+                app:layout_constraintEnd_toStartOf="@+id/batteryTxt"
+                android:text="123"/>
+
+            <TextView
+                android:id="@+id/batteryTxt"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                app:layout_constraintTop_toBottomOf="@+id/accumulatorIV"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/temperatureTxt"
+                app:layout_constraintEnd_toStartOf="@+id/heaterTxt"
+                android:text="123"/>
+
+            <TextView
+                android:id="@+id/heaterTxt"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                app:layout_constraintTop_toBottomOf="@+id/heaterIV"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/batteryTxt"
+                app:layout_constraintEnd_toStartOf="@+id/localTime"
+                android:text="123"/>
+
+
+            <TextView
+                android:id="@+id/localTime"
+                android:layout_width="50dp"
+                android:layout_height="20dp"
+                android:textAlignment="center"
+                android:layout_marginEnd="@dimen/main_icons_margin"
+                app:layout_constraintTop_toBottomOf="@+id/clockIV"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/heaterTxt"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:text="123"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:stretchColumns="1">
+
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:text="@string/timerHeader"
+                    android:layout_gravity="center"/>
+                <TextView
+                    android:textSize="12sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/timerOffHeader"
+                    android:textAlignment="center"
+                    android:layout_gravity="center"/>
+            </TableRow>
+
+            <TableRow>
+                <TimePicker
+                    android:id="@+id/timePicker"
+                    android:theme="@style/CustomTimePickerStyle"
+                    android:layout_width="250dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:timePickerMode="spinner" />
+
+                <NumberPicker
+                    android:id="@+id/timeoutNumber"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"/>
+
+            </TableRow>
+
+        </TableLayout>
+
+        <TextView
+            android:id="@+id/timerInfoTxt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/timeInfo"
+            android:textSize="16sp"
+            android:layout_gravity="center"/>
+
+        <ImageButton
+            android:id="@+id/powerBtn"
+            android:layout_marginTop="30dp"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            app:backgroundTint="@color/Power.OFF"
+            android:background="@drawable/power_material"
+            android:layout_gravity="center"/>
+
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

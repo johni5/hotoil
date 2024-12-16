@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Hotoil</string>
+    <string name="action_settings">Настройки</string>
+
+    <string name="connection">Подключение…</string>
+    <string name="no_bluetooth">BLUETOOTH не поддерживается</string>
+    <string name="bluetooth_off">BLUETOOTH отключен. Пожалуйста, включите его в настройках</string>
+    <string name="device">Устройство</string>
+    <string name="no_bt_permission">Доступ к BLUETOOTH не предоставлен</string>
+    <string name="connection_fail">Соединение прервано, проверьте устройство!</string>
+    <string name="device_not_found">Не найдено устройство</string>
+    <string name="send_error">Ошибка при отправке сообщения</string>
+    <string name="timeInfo">Запуск через 12:30</string>
+    <string name="device_info">Нет подключения</string>
+    <string name="device_find">Поиск…</string>
+    <string name="response_error">Ошибка при обработке ответа</string>
+    <string name="mode_idle_info">Простаивает</string>
+    <string name="timerHeader">Время запуска</string>
+    <string name="timerOffHeader">Время работы\n (минут)</string>
+    <string name="action_exit">Выход</string>
+    <string name="settings_power_title">Отключение нагревателя</string>
+    <string name="set_battery_title">Аккумулятор разряжен ниже</string>
+    <string name="set_heater_title">Ток нагревателя ниже</string>
+    <string name="set_temperature_title">Температура выше</string>
+    <string name="set_shake_title">Вибрация (автомобиль работает)</string>
+    <string name="set_heater_m">Ампер</string>
+    <string name="set_battery_m">Вольт</string>
+    <string name="set_temperature_m">Градус</string>
+    <string name="action_back">Назад</string>
+    <string name="settings_label">Настройки</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red">#FFFF0000</color>
+    <color name="green">#FF00FF00</color>
+
+    <color name="Connection.ON">#4CAF50</color>
+    <color name="Connection.OFF">#88968A</color>
+
+    <color name="Power.ON">#4CAF50</color>
+    <color name="Power.OFF">#FFFF0000</color>
+
+    <color name="ImageView">#FF000000</color>
+    <color name="ImageView.ON">#4CAF50</color>
+    <color name="ImageView.OFF">#88968A</color>
+    <color name="ImageView.BAD">#FFFF0000</color>
+</resources>
