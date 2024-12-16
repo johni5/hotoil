@@ -220,7 +220,8 @@ void handleShakeCalibration() {
     uint32_t _t = millis();
     accMax = 0;
     gyrMax = 0;
-    while (millis() - _t < config.calibrationSeconds * 1000) {
+    bool wait = true;
+    while (wait) {
 
       if (shakeDataCount++ == 32) {
         shakeDataCount = 0;
@@ -250,7 +251,7 @@ void handleShakeCalibration() {
           GYR = 0;
 
           Serial.print(ACC_d);
-          Serial.print(",");
+          Serial.print(" ");
           Serial.print(GYR_d);
           Serial.println();
 
@@ -261,12 +262,14 @@ void handleShakeCalibration() {
         ACC += (abs(ax) + abs(ay) + abs(az));
         GYR += (abs(gx) + abs(gy) + abs(gz));
       }
-    }
 
-    Serial.print(accMax);
-    Serial.print(" ");
-    Serial.print(gyrMax);
-    Serial.println();
+      if (config.calibrationSeconds > 0) {
+        wait = millis() - _t < config.calibrationSeconds * 1000 * 5;
+      } else {
+        wait = Serial.available() > 0;
+        if (wait) Serial.read();
+      }
+    }
   } else {
     sendError();
   }

@@ -14,8 +14,8 @@ typedef union {
     uint8_t shake : 1;
     uint8_t temperature : 1;
     uint8_t battery : 1;
-    uint8_t heaterAmpMin : 2;
-    uint8_t calibrationSeconds : 3;
+    uint8_t heaterAmpMin : 2; // 0, 1, 2, 3
+    uint8_t calibrationSeconds : 3; // 0-till event, 5sec, 10sec, ... 35sec
   };
   uint8_t raw;
 } config_t;
