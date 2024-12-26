@@ -1,9 +1,9 @@
 package com.del.hotoil;
 
+import static com.del.hotoil.Utils.error;
+
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,7 +22,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 
 import com.del.hotoil.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity implements ConnectionListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String DEVICE_NAME = "HOTOIL-01";
     private AppBarConfiguration appBarConfiguration;
@@ -33,8 +33,6 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
     private ImageButton powerBtn;
     private ImageView connectionIV, waveIV, temperatureIV, accumulatorIV, heaterIV, clockIV;
     private ConnectionManager connectionManager;
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private final ActivityResultLauncher<Intent> settingsLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -82,9 +80,9 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
         connectionIV.setOnClickListener(e -> {
             if (connectionManager.isConnected()) {
                 connectionManager.close();
+                updateStatus();
             } else {
-                deviceInfo.setText(R.string.device_find);
-                connectionManager.begin(DEVICE_NAME);
+                beginConnection();
             }
         });
 
@@ -101,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
 //        });
 
         connectionManager = new ConnectionManager(this);
-        connectionManager.setListener(this);
         updateStatus();
     }
 
@@ -109,10 +106,33 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
     protected void onStart() {
         super.onStart();
         deviceInfo.setText(R.string.device_find);
-        if (!connectionManager.begin(DEVICE_NAME)) {
+        if (!beginConnection()) {
             Toast.makeText(this, R.string.no_bluetooth, Toast.LENGTH_SHORT).show();
             finish();
         }
+    }
+
+    private boolean beginConnection() {
+        deviceInfo.setText(R.string.device_find);
+        return connectionManager.begin(DEVICE_NAME, name -> {
+            Log.d(Utils.TAG, "Connected to " + name);
+            runOnUiThread(this::updateStatus);
+        }, error -> {
+            if (error.getMessageId() > 0) {
+                runOnUiThread(() -> {
+                    deviceInfo.setText(error.getMessageId());
+                    Toast.makeText(this, error.getMessageId(), Toast.LENGTH_LONG).show();
+                });
+            } else if (error.getMsg() != null) {
+                runOnUiThread(() -> {
+                    deviceInfo.setText(error.getMsg());
+                    Toast.makeText(this, error.getMsg(), Toast.LENGTH_LONG).show();
+                });
+            }
+            if (error.getException() != null) {
+                error(error.getException());
+            }
+        });
     }
 
     @Override
@@ -155,52 +175,42 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
                 connectionManager.sendAndWaitResponse(Cmd.TEMPERATURE_GRAD, r2 -> {
                     temperatureTxt.setText(r2.formatFloat());
                 }, ex2 -> {
-                    Utils.error(ex2);
-                    runOnUiThread(() -> {
-                        temperatureTxt.setText("-");
-                        Toast.makeText(this, R.string.response_error, Toast.LENGTH_LONG).show();
-                    });
+                    error(ex2);
+                    runOnUiThread(() -> temperatureTxt.setText("-"));
                 });
                 connectionManager.sendAndWaitResponse(Cmd.BATTERY_VOLT, r2 -> {
-                    batteryTxt.setText(r2.formatFloat());
+                    runOnUiThread(() -> batteryTxt.setText(r2.formatFloat()));
                 }, ex2 -> {
-                    Utils.error(ex2);
-                    runOnUiThread(() -> {
-                        batteryTxt.setText("-");
-                        Toast.makeText(this, R.string.response_error, Toast.LENGTH_LONG).show();
-                    });
+                    error(ex2);
+                    runOnUiThread(() -> batteryTxt.setText("-"));
                 });
                 connectionManager.sendAndWaitResponse(Cmd.HEATER_AMPERAGE, r2 -> {
-                    heaterTxt.setText(r2.formatFloat());
+                    runOnUiThread(() -> heaterTxt.setText(r2.formatFloat()));
                 }, ex2 -> {
-                    Utils.error(ex2);
-                    runOnUiThread(() -> {
-                        heaterTxt.setText("-");
-                        Toast.makeText(this, R.string.response_error, Toast.LENGTH_LONG).show();
-                    });
+                    error(ex2);
+                    runOnUiThread(() -> heaterTxt.setText("-"));
                 });
-                connectionManager.sendAndWaitResponse(Cmd.TIME, r2 -> {
-                    localTime.setText(r2.formatTime());
-                }, ex2 -> {
-                    Utils.error(ex2);
-                    runOnUiThread(() -> {
-                        Toast.makeText(this, R.string.response_error, Toast.LENGTH_LONG).show();
-                    });
-                });
-
+                runOnUiThread(() -> localTime.setText("-"));
+                if (!status.isBadClock()) {
+                    connectionManager.sendAndWaitResponse(Cmd.TIME, Time.current().formatToSend(),
+                            r2 -> {
+                                Log.d(Utils.TAG, "Time synchronized. Status=" + r2.getStatus());
+                                connectionManager.sendAndWaitResponse(Cmd.TIME, r3 -> {
+                                    runOnUiThread(() -> localTime.setText(r3.getTime().formatToShow()));
+                                }, Utils::error);
+                            }, Utils::error);
+                }
                 connectionManager.sendAndWaitResponse(Cmd.TIME_ON, r2 -> {
-                    timePicker.setHour(r2.getTimeHH());
-                    timePicker.setMinute(r2.getTimeMM());
-                    timeoutNumber.setValue(r2.getTimeTimeout());
-                }, ex2 -> {
-                    Utils.error(ex2);
+                    Timer timer = r2.getTimer();
                     runOnUiThread(() -> {
-                        Toast.makeText(this, R.string.response_error, Toast.LENGTH_LONG).show();
+                        timePicker.setHour(timer.getHours());
+                        timePicker.setMinute(timer.getMinutes());
+                        timeoutNumber.setValue(timer.getDelayMinutes());
                     });
-                });
+                }, Utils::error);
 
             }, ex1 -> {
-                Utils.error(ex1);
+                error(ex1);
                 runOnUiThread(() -> Toast.makeText(this, R.string.response_error, Toast.LENGTH_LONG).show());
             });
         } else {
@@ -239,17 +249,18 @@ public class MainActivity extends AppCompatActivity implements ConnectionListene
     }
 
     @Override
-    public void onConnect(String deviceName) {
-        updateStatus();
-//        String stInfo = device.getName();
-//        deviceText.setText(stInfo);
-//        connectionText.setText("Подключено");
+    public void connectionError(int code, String msg) {
+        if (code > 0) {
+            runOnUiThread(() -> {
+                deviceInfo.setText(code);
+                Toast.makeText(this, code, Toast.LENGTH_LONG).show();
+            });
+        } else if (msg != null) {
+            runOnUiThread(() -> {
+                deviceInfo.setText(msg);
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+            });
+        }
     }
 
-    @Override
-    public void onDisconnect() {
-        updateStatus();
-//        deviceText.setText("Устройство");
-//        connectionText.setText("Отключено");
-    }
 }

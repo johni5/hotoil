@@ -6,10 +6,17 @@ import java.util.Objects;
 
 public class Response {
 
-    private String r;
+    private final String r;
+    private final Cmd cmd;
+    private Exception exception;
 
-    public Response(String r) {
+    public Response(Cmd cmd, String r) {
         this.r = r;
+        this.cmd = cmd;
+    }
+
+    public Cmd getCmd() {
+        return cmd;
     }
 
     public boolean isError() {
@@ -17,11 +24,11 @@ public class Response {
     }
 
     public Status getStatus() {
-        return new Status(Integer.parseInt(Objects.requireNonNull(r.trim())));
+        return new Status(Integer.parseInt(Objects.requireNonNull(r)));
     }
 
     public String formatFloat() {
-        return new BigDecimal(Objects.requireNonNull(r.trim())).setScale(2, RoundingMode.HALF_EVEN).toString();
+        return new BigDecimal(Objects.requireNonNull(r)).setScale(2, RoundingMode.HALF_EVEN).toString();
     }
 
     public String formatTime() {
@@ -31,25 +38,19 @@ public class Response {
         return "-";
     }
 
-    public int getTimeHH() {
-        if (r != null && r.trim().length() > 1) {
-            return Integer.parseInt(r.trim().substring(0, 2));
-        }
-        return 0;
+    public Time getTime() {
+        return Time.parse(Objects.requireNonNull(r));
     }
 
-    public int getTimeMM() {
-        if (r != null && r.trim().length() > 3) {
-            return Integer.parseInt(r.trim().substring(2, 4));
-        }
-        return 0;
+    public Timer getTimer() {
+        return Timer.parse(Objects.requireNonNull(r));
     }
 
-    public int getTimeTimeout() {
-        if (r != null && r.trim().length() > 5) {
-            return Integer.parseInt(r.trim().substring(4, 6));
-        }
-        return 0;
+    public Exception getException() {
+        return exception;
     }
 
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
 }

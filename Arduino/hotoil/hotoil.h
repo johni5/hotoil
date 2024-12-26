@@ -45,6 +45,9 @@ const char s_cmdMode[] PROGMEM = "MODE";
 const char s_cmdState[] PROGMEM = "STATE";
 const char s_cmdStatem[] PROGMEM = "STATEM";
 const char s_cmdTime[] PROGMEM = "TI";
+
+// [HH:2][MM:2][TimeoutOnSec:2][powerOnTimeStampSec:0-8]
+// 1200152800
 const char s_cmdTimeOn[] PROGMEM = "TION";
 const char s_cmdBatteryLevel[] PROGMEM = "VB";
 const char s_cmdBatteryLevelMin[] PROGMEM = "VBMIN";

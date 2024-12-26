@@ -36,5 +36,16 @@ public class Status {
         return (status & 0b10000000) > 0;
     }
 
-
+    @Override
+    public String toString() {
+        return "Status{\n" +
+                "\tON=" + isOn() + "\n" +
+                "\tMODE=" + getMode() + "\n" +
+                "\tLow battery=" + isLowBattery() + "\n" +
+                "\tHi temperature=" + isHiTemperature() + "\n" +
+                "\tShake detected=" + isShakeDetected() + "\n" +
+                "\tBad heater=" + isBadHeater() + "\n" +
+                "\tBad clock=" + isBadClock() + "\n" +
+                '}';
+    }
 }

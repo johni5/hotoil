@@ -12,8 +12,6 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -36,18 +34,18 @@ public class ConnectionManager {
     private final static String UUID_STRING_WELL_KNOWN_SPP = "00001101-0000-1000-8000-00805F9B34FB";
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private static final int REQUEST_ENABLE_BT = 1;
 
     final private AppCompatActivity ownerActivity;
     private final ActivityResultLauncher<String[]> multipleBTPermissionsLauncher;
-    private ConnectionListener listener;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice bluetoothDevice;
     private BluetoothSocket mmSocket;
     private InputStream mmInStream = null;
     private OutputStream mmOutStream = null;
+    private Consumer<String> onConnect;
+    private Consumer<Error> onError;
 
     private String deviceName;
 
@@ -92,19 +90,21 @@ public class ConnectionManager {
                                         mmSocket.connect();
                                         mmInStream = mmSocket.getInputStream();
                                         mmOutStream = mmSocket.getOutputStream();
-                                        if (listener != null)
-                                            handler.post(() -> listener.onConnect(d.getName()));
+                                        if (onConnect != null) onConnect.accept(d.getName());
                                     } catch (Exception e) {
-                                        error(e);
-                                        showMessageOnView(R.string.connection_fail);
+                                        if (onError != null)
+                                            onError.accept(new Error(R.string.connection_fail, null, e));
                                         Utils.close(mmSocket);
                                     }
                                 });
                             } catch (Exception e) {
-                                error(e);
-                                showMessageOnView(R.string.connection_fail);
+                                if (onError != null)
+                                    onError.accept(new Error(R.string.connection_fail, null, e));
                             }
-                        }, () -> showMessageOnView(R.string.device_not_found));
+                        }, () -> {
+                            if (onError != null)
+                                onError.accept(new Error(R.string.device_not_found));
+                        });
             } else {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 ownerActivity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -113,16 +113,10 @@ public class ConnectionManager {
 
     }
 
-    private void showMessageOnView(int m) {
-        handler.post(() -> Toast.makeText(ownerActivity, m, Toast.LENGTH_LONG).show());
-    }
-
-    public void setListener(ConnectionListener listener) {
-        this.listener = listener;
-    }
-
-    public boolean begin(String name) {
+    public boolean begin(String name, Consumer<String> onConnect, Consumer<Error> onError) {
         this.deviceName = name;
+        this.onConnect = onConnect;
+        this.onError = onError;
         if (!ownerActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
             Toast.makeText(ownerActivity, R.string.no_bluetooth, Toast.LENGTH_LONG).show();
             return false;
@@ -144,24 +138,26 @@ public class ConnectionManager {
     }
 
     public void sendAndWaitResponse(Cmd cmd, Consumer<Response> cb, Consumer<Exception> err) {
+        sendAndWaitResponse(cmd, null, cb, err);
+    }
+
+    public void sendAndWaitResponse(Cmd cmd, String params, Consumer<Response> cb, Consumer<Exception> err) {
         if (mmOutStream != null && cmd != null) {
             try {
-                mmOutStream.write(cmd.getBytes());
+                mmOutStream.write(cmd.getBytes(params));
                 executor.execute(() -> {
                     Log.d(Utils.TAG, "wait response");
                     WaitScanner s = new WaitScanner(mmInStream);
                     s.waitLine(5).ifPresentOrElse(response -> {
                         Log.d(Utils.TAG, "get response " + response);
                         try {
-                            Response r1 = new Response(response);
-                            if (!r1.isError()) cb.accept(r1);
-                            else err.accept(new Exception("Response ERROR"));
+                            Response r1 = new Response(cmd, response);
+                            if (!r1.isError()) if (cb != null) cb.accept(r1);
+                            else if (err != null) err.accept(new Exception("Response ERROR"));
                         } catch (Exception e) {
-                            err.accept(e);
+                            if (err != null) err.accept(e);
                         }
-                    }, () -> {
-                        Log.d(Utils.TAG, "no response");
-                    });
+                    }, () -> Log.d(Utils.TAG, "no response"));
                 });
             } catch (Exception e) {
                 error(e);
@@ -198,7 +194,6 @@ public class ConnectionManager {
     public void close() {
         this.bluetoothDevice = null;
         Utils.close(mmSocket);
-        if (listener != null) listener.onDisconnect();
     }
 
 }

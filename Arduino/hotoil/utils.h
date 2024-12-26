@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <EEPROM.h>
 
 #define EEPROM_ADDRESS_I2C 0x50
 
@@ -7,24 +8,41 @@ uint8_t parseInt(const char *args, uint16_t *value) {
   *value = 0;
   for (;;) {
     char ch = *args;
-    if (ch >= '0' && ch <= '9') {
+    if (ch >= '0' && ch <= '9' && size < 4) {
       *value = *value * 10 + (ch - '0');
     } else
       break;
     ++args;
     ++size;
   }
-  if (*args != '\0' && *args != '-' && *args != ' ' && *args != '\t')
-    return 0;
+  // if (*args != '\0' && *args != '-' && *args != ' ' && *args != '\t')
+  //   return 0;
   return size;
 }
 
-uint8_t parseBytesArray(const char *args, uint8_t *value) {
+uint8_t parseLong(const char *args, uint32_t *value) {
+  uint8_t size = 0;
+  *value = 0;
+  for (;;) {
+    char ch = *args;
+    if (ch >= '0' && ch <= '9' && size < 8) {
+      *value = *value * 10 + (ch - '0');
+    } else
+      break;
+    ++args;
+    ++size;
+  }
+  // if (*args != '\0' && *args != '-' && *args != ' ' && *args != '\t')
+  //   return 0;
+  return size;
+}
+
+uint8_t parseBytesArray(const char *args, uint8_t *value, uint8_t sizeVal = 0) {
   uint8_t size = 0, idx = 0;
   value[idx] = 0;
   for (;;) {
     char ch = *args;
-    if (ch >= '0' && ch <= '9') {
+    if (ch >= '0' && ch <= '9' && (sizeVal == 0 || size < sizeVal * 2)) {
       if (size > 0 && size % 2 == 0) value[++idx] = 0;
       value[idx] = (value[idx] * 10) + (ch - '0');
     } else
@@ -32,8 +50,8 @@ uint8_t parseBytesArray(const char *args, uint8_t *value) {
     ++size;
     ++args;
   }
-  if (*args != '\0' && *args != '-' && *args != ' ' && *args != '\t')
-    return 0;
+  //if (*args != '\0' && *args != '-' && *args != ' ' && *args != '\t')
+  //  return 0;
   return (size + 1) / 2;
 }
 
@@ -79,21 +97,23 @@ byte crc8(byte *buffer, byte size) {
 }
 
 void writeEEPROM(uint16_t addr, byte data) {
-  Wire.beginTransmission(EEPROM_ADDRESS_I2C);
-  Wire.write((addr >> 8) & 0xFF);
-  Wire.write(addr & 0xFF);
-  Wire.write(data);
-  Wire.endTransmission();
-  delay(5);
+  EEPROM.write(addr, data);
+  // Wire.beginTransmission(EEPROM_ADDRESS_I2C);
+  // Wire.write((addr >> 8) & 0xFF);
+  // Wire.write(addr & 0xFF);
+  // Wire.write(data);
+  // Wire.endTransmission();
+  // delay(5);
 }
 
 
 byte readEEPROM(uint16_t addr) {
-  Wire.beginTransmission(EEPROM_ADDRESS_I2C);
-  Wire.write((addr >> 8) & 0xFF);
-  Wire.write(addr & 0xFF);
-  Wire.endTransmission();
-  Wire.requestFrom(EEPROM_ADDRESS_I2C, 1);
-  while (Wire.available() == 0);
-  return Wire.read();
+  return EEPROM.read(addr);
+  // Wire.beginTransmission(EEPROM_ADDRESS_I2C);
+  // Wire.write((addr >> 8) & 0xFF);
+  // Wire.write(addr & 0xFF);
+  // Wire.endTransmission();
+  // Wire.requestFrom(EEPROM_ADDRESS_I2C, 1);
+  // while (Wire.available() == 0);
+  // return Wire.read();
 }

@@ -29,7 +29,11 @@ public enum Cmd {
         return code;
     }
 
-    public byte[] getBytes() {
-        return code.getBytes(StandardCharsets.UTF_8);
+    public byte[] getBytes(String params) {
+        StringBuffer s = new StringBuffer(code);
+        if (params != null && !params.trim().isEmpty()) {
+            s.append(" ").append(params);
+        }
+        return s.toString().getBytes(StandardCharsets.UTF_8);
     }
 }

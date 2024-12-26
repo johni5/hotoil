@@ -23,4 +23,5 @@ public enum Mode {
         }
         throw new IllegalArgumentException("code " + code + " not support");
     }
+
 }

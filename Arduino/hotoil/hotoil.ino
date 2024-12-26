@@ -43,6 +43,7 @@ config_t config;
 status_t status;
 uint32_t timePowerOn;
 uint32_t waitTimeout;
+uint32_t powerOnTimeStamp;
 
 void shakeDetection() {
   if (!shakeDetectorEnabled) return;
@@ -144,8 +145,7 @@ void setup() {
   } else {
     config.raw = readEEPROM(1);
   }
-
-
+  status.bad_clock = !RTC.read(tm);
   status.mode = MODE_IDLE;
   powerOff();
 }
@@ -182,20 +182,38 @@ void handleIdle() {
   delay(50);
 }
 
+bool isTimeForPowerOn() {
+  status.bad_clock = !RTC.read(tm);
+  if (status.bad_clock) {
+    return millis() >= powerOnTimeStamp;
+  } else {
+    return (tm.Hour == timer.hh && tm.Minute == timer.mm);
+  }
+}
+
+bool isTimeForPowerOff() {
+  status.bad_clock = !RTC.read(tm);
+  if (status.bad_clock) {
+    return millis() >= powerOnTimeStamp;
+  } else {
+    uint16_t start_minutes = (tm.Hour * 60 + tm.Minute) - (timer.hh * 60 + timer.mm);
+    return start_minutes >= timer.delay_mm;
+  }
+}
+
 void handleWait() {
   if (millis() - waitTimeout > 1000) {
-    status.bad_clock = !RTC.read(tm);
-    if (!status.bad_clock && testForRun()) {
+    if (testForRun()) {
       if (status.on) {
-        uint16_t start_minutes = (tm.Hour * 60 + tm.Minute) - (timer.hh * 60 + timer.mm);
-        if (start_minutes >= timer.delay_mm) {
+        if (isTimeForPowerOff()) {
           powerOff();
+          status.mode = MODE_IDLE;
         }
       } else {
-        if (tm.Hour == timer.hh && tm.Minute == timer.mm) {
-          if (!powerOn()) {
+        if (isTimeForPowerOn()) {
+          powerOnTimeStamp += ((uint32_t)timer.delay_mm) * 60 * 1000;
+          if (!powerOn())
             status.mode = MODE_IDLE;
-          }
         }
       }
     } else {
@@ -367,10 +385,9 @@ void cmdStatem(const char *args) {
 }
 
 void cmdTime(const char *args) {
-  uint8_t time[3];
+  uint8_t time[2];
   uint8_t l = parseBytesArray(args, time);
   if (RTC.read(tm)) {
-    if (l > 2 && time[2] < 60) tm.Second = time[2];
     if (l > 1 && time[1] < 60) tm.Minute = time[1];
     if (l > 0 && time[0] < 24) tm.Hour = time[0];
     if (l > 0) {
@@ -382,7 +399,6 @@ void cmdTime(const char *args) {
     } else {
       print2digits(tm.Hour);
       print2digits(tm.Minute);
-      print2digits(tm.Second);
       Serial.println();
       return;
     }
@@ -393,14 +409,23 @@ void cmdTime(const char *args) {
 
 void cmdTimeOn(const char *args) {
   uint8_t time[3];
-  uint8_t l = parseBytesArray(args, time);
+  uint8_t l = parseBytesArray(args, time, 3);
   if (l == 0) {
     print2digits(timer.hh);
     print2digits(timer.mm);
     print2digits(timer.delay_mm);
+    if (powerOnTimeStamp > millis()) {
+      Serial.print((powerOnTimeStamp - millis()) / 1000, DEC);
+    } else {
+      Serial.print("0");
+    }
     Serial.println();
     return;
   } else if (l == 3) {
+    args += (l * 2);
+    parseLong(args, &powerOnTimeStamp);
+    powerOnTimeStamp *= 1000;
+    powerOnTimeStamp += millis();
     timer.hh = time[0] < 24 ? time[0] : 0;
     timer.mm = time[1] < 60 ? time[1] : 0;
     timer.delay_mm = time[2] < 60 ? time[2] : 0;
